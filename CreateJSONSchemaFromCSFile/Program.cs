@@ -21,12 +21,20 @@ namespace CreateJSONSchemaFromCSFile
 
                     var syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(x.CSFile));
 
+                    var metadataReference = new List<MetadataReference>();
+                    metadataReference.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
+                    metadataReference.Add(MetadataReference.CreateFromFile(typeof(System.ComponentModel.DefaultValueAttribute).Assembly.Location));
+
+                    foreach (var reference in x.AdditionalDlls)
+                    {
+                        metadataReference.Add(MetadataReference.CreateFromFile(reference));
+                    }
+
                     CSharpCompilation compilation = CSharpCompilation.Create(
                         "assemblyName",
                         new[] { syntaxTree },
-                        new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                            MetadataReference.CreateFromFile(typeof(System.ComponentModel.DefaultValueAttribute).Assembly.Location) },
-                        new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                        metadataReference,
+                        new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));       
 
                     using (var dllStream = new MemoryStream())
                     using (var pdbStream = new MemoryStream())
